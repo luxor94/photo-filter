@@ -10,7 +10,8 @@ const blurs = document.getElementsByName('blur'),
     download = document.querySelector('.btn-save'),
     output = document.querySelectorAll('output'),
     root = document.querySelector(':root'),
-    rootStyles = getComputedStyle(root);
+    rootStyles = getComputedStyle(root),
+    fullscreen = document.querySelector('.fullscreen');
     
 let images = document.querySelector('img');
 
@@ -30,31 +31,32 @@ window.oninput = function() {
 
     output[4].innerHTML = `${hue[0].value}`;
     root.style.setProperty('--hue', `${hue[0].value}deg`);
+    drawImage();
   };
 
 
 
   
-  btnReset.addEventListener('click', function (event) {
-    blurs[0].value = 0;
-    root.style.setProperty('--blur', `0px`);
-    invert[0].value = 0;
-    root.style.setProperty('--invert', `0%`);
-    sepia[0].value = 0;
-    root.style.setProperty('--sepia', `0%`);
-    saturate[0].value = 100;
-    root.style.setProperty('--saturate', `100%`);
-    hue[0].value = 0;
-    root.style.setProperty('--hue', `0deg`);
-    output.forEach(el => {
-        output[0].innerHTML = `${blurs[0].value}`;
-        output[1].innerHTML = `${invert[0].value}`
-        output[2].innerHTML = `${sepia[0].value}`;
-        output[3].innerHTML = `${saturate[0].value}`;
-        output[4].innerHTML = `${hue[0].value}`;
-    })
-
-  });
+btnReset.addEventListener('click', function (event) {
+  blurs[0].value = 0;
+  root.style.setProperty('--blur', `0px`);
+  invert[0].value = 0;
+  root.style.setProperty('--invert', `0%`);
+  sepia[0].value = 0;
+  root.style.setProperty('--sepia', `0%`);
+  saturate[0].value = 100;
+  root.style.setProperty('--saturate', `100%`);
+  hue[0].value = 0;
+  root.style.setProperty('--hue', `0deg`);
+  output.forEach(el => {
+    output[0].innerHTML = `${blurs[0].value}`;
+    output[1].innerHTML = `${invert[0].value}`
+    output[2].innerHTML = `${sepia[0].value}`;
+    output[3].innerHTML = `${saturate[0].value}`;
+    output[4].innerHTML = `${hue[0].value}`;
+  })
+  drawImage();
+});
 
 let day
 let pic = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12' , '13', '14', '15' ,'20'].sort(() => Math.random() - 0.5).concat(['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12' , '13', '14', '15' ,'20'].sort(() => Math.random() - 0.5)); 
@@ -78,17 +80,7 @@ let pic = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12
 showTime()
 
 let i = 0
-function background() {  
-    const img = new Image();
-    img.src = `./assets/img/${day}/${pic[i]}.jpg`;
-    img.onload = () => {      
-        images.src = `./assets/img/${day}/${pic[i]}.jpg`;
-        
-    }; 
-  } 
-background() 
-let test
-
+let uploadImg
 
 upload.addEventListener('change', function(e) {
   const file = upload.files[0];
@@ -96,20 +88,14 @@ upload.addEventListener('change', function(e) {
   reader.onload = () => {
       const img = new Image();
       img.src = reader.result;
-      test = `${reader.result}` 
+      uploadImg = `${reader.result}` 
       images.src = `${reader.result}`
       drawImage()
-           
-         
   }
- 
   reader.readAsDataURL(file);
-
-  
 });
 
-
-let img2
+let img2;
 function drawImage() {
   img2 = new Image();
   img2.setAttribute('crossOrigin', 'anonymous'); 
@@ -118,40 +104,51 @@ function drawImage() {
     canvas.width = img2.width;
     canvas.height = img2.height;
     const ctx = canvas.getContext("2d");
-    if (test) {
-    img2.src = test
-    ctx.drawImage(img2, 0, 0);
-    } else {
+    drawBlur = `blur(${blurs[0].value}px)`;
+    drawInvert = `invert(${invert[0].value}%)`;
+    drawSepia = `sepia(${sepia[0].value}%)`;
+    drawSaturate = `saturate(${saturate[0].value}%)`;
+    drawHue = `hue-rotate(${hue[0].value}deg)`;
+    if (uploadImg) {
+    img3 = new Image()
+    img3.src = uploadImg
+    canvas.width = img3.width;
+    canvas.height = img3.height
+    ctx.filter = `${drawBlur} ${drawInvert} ${drawSepia} ${drawSaturate} ${drawHue}`;
+    ctx.drawImage(img3, 0, 0);
+    }
+    if (!uploadImg) {
+      ctx.filter = `${drawBlur} ${drawInvert} ${drawSepia} ${drawSaturate} ${drawHue}`;
       ctx.drawImage(img2, 0, 0);
     }
-    
-    
   };  
 }
 drawImage();
 
-
-
 nextImg.onclick = function() {
-  test = 0
+  uploadImg = 0
     if (i < 20) {
         i++
-        background()
         drawImage()
     } else {
         i = 0
-        background()
         drawImage()
     }
-
   };
 
+download.addEventListener('click', function(e) {
+  var link = document.createElement('a');
+  link.download = 'download.png';
+  link.href = canvas.toDataURL();
+  link.click();
+  link.delete;
+});
 
+fullscreen.addEventListener('click', function (event) {
+  if (document.fullscreenElement) {
+    document.exitFullscreen();
+  } else {
+    document.documentElement.requestFullscreen();
+  };
+});
 
-  download.addEventListener('click', function(e) {
-    var link = document.createElement('a');
-    link.download = 'download.png';
-    link.href = canvas.toDataURL();
-    link.click();
-    link.delete;
-  });
